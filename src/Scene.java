@@ -9,10 +9,12 @@ public class Scene {
     private int width; // The height of the window
     private String windowName; // The name of the window
     // User settings
-    private static Color bgColor = Color.WHITE; // The background color of the game
+    private Color bgColor = Color.WHITE; // The background color of the game
+    // Program variables
     private static Font btnFont  = new Font(Font.SANS_SERIF, Font.PLAIN,  25); // The font for buttons
-    private static Font titleFont = new Font(Font.SANS_SERIF, Font.BOLD,  50); // The font for the title
-    private static Font textFont = new Font(Font.SANS_SERIF, Font.PLAIN,  15); // The font for labels
+    private static Font H1 = new Font(Font.SANS_SERIF, Font.BOLD,  50); // The font for the H1s
+    private static Font H2 = new Font(Font.SANS_SERIF, Font.BOLD,  25); // The font for the H2s
+    private static Font labelFont = new Font(Font.SANS_SERIF, Font.PLAIN,  15); // The font for labels
 
     /**
      * The default constructor.
@@ -41,57 +43,32 @@ public class Scene {
         frame.setLocationRelativeTo(null);
 
         JPanel menuContainer = new JPanel();
-        menuContainer.setLayout(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        menuContainer.setLayout(new BorderLayout(10, 0));
         menuContainer.setBackground(bgColor);
 
         JPanel mainMenu = new JPanel();
-        mainMenu.setLayout(new GridLayout(4, 1));
+        mainMenu.setLayout(new GridLayout(5, 1));
         mainMenu.setBackground(bgColor);
 
-        JPanel optionsMenu = new JPanel();
-        optionsMenu.setLayout(new GridLayout(3, 1, 10, 10));
-        optionsMenu.setBackground(bgColor);
-
-        JPanel aboutMenu = new JPanel();
-        aboutMenu.setLayout(new GridLayout(3, 1, 10, 10));
-        aboutMenu.setBackground(bgColor);
-
-        JLabel title = new JLabel("Simon");
-        title.setFont(titleFont);
-        title.setBorder(new EmptyBorder(15,5,20,0));
-        mainMenu.add(title);
+        JLabel title = createLabel("Simon", mainMenu, H1);
 
         JButton startBtn = createBtn("Play", mainMenu);
-        JButton optionBtn = createBtn("Options", mainMenu);
-        JButton aboutBtn = createBtn("About", mainMenu);
 
-        JLabel options = new JLabel("Options.");
-        options.setFont(textFont);
+        JLabel optionLabel = createLabel("Options", mainMenu, H2);
 
-        JTextArea about = createText("Welcome to Simon.\n\nHow to play:\nThere are 4 buttons colored red, green, blue, and yellow.\nOne of the buttons will flash and you have to click that same one.\nAfter that the one that just flashed will flash again followed by a second flash on another button.\nYou then have to click those buttons following the pattern.\nThis will continue each time getting 1 flash longer until you incorrectly repeat the pattern.\n\nMade by Kiefer Menard.", aboutMenu);
+        JButton bgBtn = createBtn("Change background color", mainMenu);
+        bgBtn.setFont(new Font(Font.SANS_SERIF, Font.PLAIN,  15));
 
-        aboutMenu.add(about);
+        menuContainer.add(mainMenu, BorderLayout.WEST);
 
-        menuContainer.add(mainMenu);
-        menuContainer.add(optionsMenu);
-        optionsMenu.setVisible(false);
-        menuContainer.add(aboutMenu);
-        aboutMenu.setVisible(false);
+        JLabel about = createLabel("<HTML>Welcome to Simon.<br><br>Your hi-score is 0.<br><br>How to play:<br>There are four buttons — red, green, blue, and yellow. When one button lights up, click on the same one. The sequence begins with a single flash, followed by a repeat of the previous button and a quick flash of a different button. Your task is to replicate this pattern. The complexity increases with each successful round, adding an extra flash each time. The game continues until an incorrect pattern repetition occurs.<br><br>Developed by Kiefer Menard.</HTML>\n", menuContainer, labelFont);
+        about.setFont(labelFont);
+
         frame.add(menuContainer);
+        frame.setVisible(true);
 
         startBtn.addActionListener(e -> Main.startGame());
-
-        optionBtn.addActionListener(e -> {
-            aboutMenu.setVisible(false);
-            optionsMenu.setVisible(true);
-        });
-
-        aboutBtn.addActionListener(e -> {
-            optionsMenu.setVisible(false);
-            aboutMenu.setVisible(true);
-        });
-
-        frame.setVisible(true);
+        //bgBtn.addActionListener();
     }
 
     public JButton createBtn(String text, JPanel panel) {
@@ -104,9 +81,9 @@ public class Scene {
         return button;
     }
 
-    public JTextArea createText(String text, JPanel panel) {
-        JTextArea label = new JTextArea(text);
-        label.setFont(textFont);
+    public JLabel createLabel(String text, JPanel panel, Font font) {
+        JLabel label = new JLabel(text);
+        label.setFont(font);
 
         panel.add(label);
 
