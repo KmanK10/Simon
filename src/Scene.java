@@ -40,8 +40,9 @@ public class Scene implements ChangeListener, KeyListener {
     private JLabel optionLabel = new JLabel();
     private JButton bgBtn = new JButton();
     private JPanel fileContainer = new JPanel();
-    private JButton fileBtn;
-    private JButton resetBtn;
+    private JButton resetDataBtn;
+    private JButton resetPathBtn;
+    private JButton fileBtn = new JButton();
     private JLabel about = new JLabel();
     private JButton greenBtn = new JButton();
     private JButton redBtn = new JButton();
@@ -107,7 +108,7 @@ public class Scene implements ChangeListener, KeyListener {
             container.setFocusable(true);
             System.out.println(container.requestFocusInWindow());
 
-            mainMenu.setLayout(new GridLayout(5, 1));
+            mainMenu.setLayout(new GridLayout(6, 1, 0, 2));
 
             createLabel(title, "Simon", mainMenu, H1);
 
@@ -121,15 +122,20 @@ public class Scene implements ChangeListener, KeyListener {
             fileContainer.setLayout(new BorderLayout());
             fileContainer.setBackground(bgColor);
 
-            fileBtn  = new JButton("Change save file");
-            fileContainer.add(fileBtn, BorderLayout.WEST);
-            fileBtn.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 10));
+            resetDataBtn  = new JButton("<HTML>Reset save data<br>to default</HTML>");
+            fileContainer.add(resetDataBtn, BorderLayout.WEST);
+            resetDataBtn.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 10));
+            resetDataBtn.setOpaque(true);
 
-            resetBtn  = new JButton("<HTML>Reset file path<br>to default</HTML>");
-            fileContainer.add(resetBtn, BorderLayout.EAST);
-            resetBtn.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 10));
+            resetPathBtn  = new JButton("<HTML>Reset file path<br>to default</HTML>");
+            fileContainer.add(resetPathBtn, BorderLayout.EAST);
+            resetPathBtn.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 10));
+            resetPathBtn.setOpaque(true);
 
             mainMenu.add(fileContainer);
+
+            createBtn(fileBtn, "Change save file", mainMenu);
+            fileBtn.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 15));
 
             container.add(mainMenu, BorderLayout.WEST);
 
@@ -173,14 +179,21 @@ public class Scene implements ChangeListener, KeyListener {
                 colorFrame.setVisible(true);
             });
 
+            resetDataBtn.addActionListener(e -> {
+                bgColor = Color.WHITE;
+                refreshColors();
+                hiScore = 0;
+                writeFile();
+            });
+
+            resetPathBtn.addActionListener(e -> {
+                file = new File("./simon.txt");
+                fileSetup();
+            });
+
             fileBtn.addActionListener(e -> {
                 JOptionPane.showMessageDialog(null, "<HTML>Please select a text file or directory for storing save data.<br>If a file isn't chosen, a default text file called <em>simon.txt</em><br>will be generated in the selected directory.</HTML>", "Choose File", JOptionPane.PLAIN_MESSAGE);
                 fileFrame.setVisible(true);
-            });
-
-            resetBtn.addActionListener(e -> {
-                file = new File("./simon.txt");
-                fileSetup();
             });
         } catch (Exception ex) {
             System.out.println(ex.getMessage());
@@ -313,8 +326,9 @@ public class Scene implements ChangeListener, KeyListener {
         optionLabel.setForeground(textColor);
         bgBtn.setBackground(bgAdjusted);
         fileContainer.setBackground(bgColor);
+        resetDataBtn.setBackground(bgAdjusted);
+        resetPathBtn.setBackground(bgAdjusted);
         fileBtn.setBackground(bgAdjusted);
-        resetBtn.setBackground(bgAdjusted);
         about.setBackground(bgColor);
         about.setForeground(textColor);
     }
