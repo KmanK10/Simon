@@ -21,7 +21,7 @@ public class Scene implements ChangeListener, KeyListener {
     private File file;
     private FileWriter writer;
     private int hiScore = 0;
-    private int score = 0;
+    private int score;
     // Program variables
     private static Font btnFont = new Font(Font.SANS_SERIF, Font.PLAIN, 25); // The font for buttons
     private static Font H1 = new Font(Font.SANS_SERIF, Font.BOLD, 50); // The font for the H1s
@@ -65,6 +65,11 @@ public class Scene implements ChangeListener, KeyListener {
         initialize();
     }
 
+    /**
+     * The initialize method sets up the window with the proper UI elements.
+     *
+     * @author Kiefer Menard
+     */
     private void initialize() {
         try {
             frame.setTitle(windowName);
@@ -182,8 +187,14 @@ public class Scene implements ChangeListener, KeyListener {
         }
     }
 
+    /**
+     * The playGame method runs the program flow once the game is running.
+     *
+     * @author Kiefer Menard
+     */
     private void playGame() {
-        score++;
+        // Variables
+        score = 0; // Reset score
 
         container.removeAll();
         container.revalidate();
@@ -196,6 +207,11 @@ public class Scene implements ChangeListener, KeyListener {
         container.add(blueBtn);
     }
 
+    /**
+     * The endGame method handles shutting down the game and going back to the main menu.
+     *
+     * @author Kiefer Menard
+     */
     private void endGame() {
         container.removeAll();
         container.revalidate();
@@ -207,6 +223,12 @@ public class Scene implements ChangeListener, KeyListener {
         fileSetup();
     }
 
+    /**
+     * The fileSetup method handles everything to do with the save file.
+     * Should be run whenever a new file is selected by the user.
+     *
+     * @author Kiefer Menard
+     */
     private void fileSetup() {
         // Variables:
         String line = "";
@@ -247,6 +269,12 @@ public class Scene implements ChangeListener, KeyListener {
         }
     }
 
+    /**
+     * The writeFile method writes the correct info to the save file so that it can be saved for future use.
+     * Saves the users highest score and the background color, meaning it should be run whenever those change.
+     *
+     * @author Kiefer Menard
+     */
     private void writeFile() {
         try {
             writer = new FileWriter(file);
@@ -259,6 +287,12 @@ public class Scene implements ChangeListener, KeyListener {
         }
     }
 
+    /**
+     * The refreshColors method handles setting all the colors of the UI elements based off the background color variable.
+     * Should be run everytime the user changes the background color or changes the save file.
+     *
+     * @author Kiefer Menard
+     */
     private void refreshColors() {
         Color textColor;
         Color bgAdjusted;
@@ -285,16 +319,36 @@ public class Scene implements ChangeListener, KeyListener {
         about.setForeground(textColor);
     }
 
+    /**
+     * The keyTyped method handles keyboard inputs.
+     *
+     * @author Kiefer Menard
+     */
     @Override
     public void keyTyped(KeyEvent e) {
         System.out.println(e.getKeyChar());
     }
 
+    /**
+     * The keyPressed method handles key presses on the keyboard.
+     *
+     * @author Kiefer Menard
+     */
     @Override
     public void keyPressed(KeyEvent e) {}
+    /**
+     * The keyReleased method handles key releases on the keyboard.
+     *
+     * @author Kiefer Menard
+     */
     @Override
     public void keyReleased(KeyEvent e) {}
 
+    /**
+     * The stateChanged method handles a change in the state of the color picker. I.e. when the user selects a new color.
+     *
+     * @author Kiefer Menard
+     */
     public void stateChanged(ChangeEvent e) {
         if (picker.getColor().getAlpha() == 255) {
             bgColor = picker.getColor();
@@ -303,6 +357,15 @@ public class Scene implements ChangeListener, KeyListener {
         }
     }
 
+    /**
+     * The createBtn method initializes a JButton with all the necessary attributes.
+     *
+     * @param button Which JButton object to initialize.
+     * @param text What text to display on the button.
+     * @param panel Which JPanel to add the button to.
+     * @return Returns the JButton object.
+     * @author Kiefer Menard
+     */
     private JButton createBtn(JButton button, String text, JPanel panel) {
         button.setText(text);
         button.setFont(btnFont);
@@ -313,6 +376,16 @@ public class Scene implements ChangeListener, KeyListener {
         return button;
     }
 
+    /**
+     * The createLabel method initializes a JLabel with all the necessary attributes.
+     *
+     * @param label Which JLabel object to initialize.
+     * @param text What text to display in the label.
+     * @param panel Which JPanel to add the label to.
+     * @param font Which font to use.
+     * @return Returns the JLabel object.
+     * @author Kiefer Menard
+     */
     private JLabel createLabel(JLabel label, String text, JPanel panel, Font font) {
         label.setText(text);
         label.setFont(font);
