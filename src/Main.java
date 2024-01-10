@@ -4,10 +4,6 @@ public class Main {
     private static final String WINDOW_NAME = "Simon";
 
     public static void main(String[] args) {
-        Scene scene = new Scene(WIDTH, HEIGHT, WINDOW_NAME);
-    }
-
-    public static void startGame() {
-
+        Scene game = new Scene(WIDTH, HEIGHT, WINDOW_NAME);
     }
 }

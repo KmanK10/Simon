@@ -1,5 +1,3 @@
-import org.w3c.dom.css.RGBColor;
-
 import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -9,8 +7,6 @@ import java.awt.event.KeyListener;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.Writer;
-import java.util.Arrays;
 import java.util.Scanner;
 import static java.lang.Integer.max;
 import static java.lang.Integer.parseInt;
@@ -43,7 +39,9 @@ public class Scene implements ChangeListener, KeyListener {
     private JButton startBtn = new JButton();
     private JLabel optionLabel = new JLabel();
     private JButton bgBtn = new JButton();
-    private JButton fileBtn = new JButton();
+    private JPanel fileContainer = new JPanel();
+    private JButton fileBtn;
+    private JButton resetBtn;
     private JLabel about = new JLabel();
     private JButton greenBtn = new JButton();
     private JButton redBtn = new JButton();
@@ -88,7 +86,7 @@ public class Scene implements ChangeListener, KeyListener {
 
             fileFrame.setTitle("Choose File");
             fileFrame.setLayout(new BorderLayout());
-            fileFrame.setDefaultCloseOperation(frame.EXIT_ON_CLOSE);
+            fileFrame.setDefaultCloseOperation(frame.DISPOSE_ON_CLOSE);
             fileFrame.setSize(700, 450);
             fileFrame.setResizable(false);
             fileFrame.setLocationRelativeTo(null);
@@ -102,6 +100,7 @@ public class Scene implements ChangeListener, KeyListener {
 
             container.setLayout(new BorderLayout(10, 0));
             container.setFocusable(true);
+            System.out.println(container.requestFocusInWindow());
 
             mainMenu.setLayout(new GridLayout(5, 1));
 
@@ -114,14 +113,25 @@ public class Scene implements ChangeListener, KeyListener {
             createBtn(bgBtn, "Change background color", mainMenu);
             bgBtn.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 15));
 
-            createBtn(fileBtn, "Change save file", mainMenu);
-            fileBtn.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 20));
+            fileContainer.setLayout(new BorderLayout());
+            fileContainer.setBackground(bgColor);
+
+            fileBtn  = new JButton("Change save file");
+            fileContainer.add(fileBtn, BorderLayout.WEST);
+            fileBtn.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 10));
+
+            resetBtn  = new JButton("<HTML>Reset file path<br>to default</HTML>");
+            fileContainer.add(resetBtn, BorderLayout.EAST);
+            resetBtn.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 10));
+
+            mainMenu.add(fileContainer);
 
             container.add(mainMenu, BorderLayout.WEST);
 
             createLabel(about, "", container, labelFont);
 
             frame.add(container);
+            frame.setVisible(true);
 
             greenBtn.setBackground(Color.GREEN.darker());
             greenBtn.setOpaque(true);
@@ -133,8 +143,8 @@ public class Scene implements ChangeListener, KeyListener {
             blueBtn.setOpaque(true);
 
             if (file == null) {
-                JOptionPane.showMessageDialog(null, "<HTML>Please select a text file or directory for storing save data.<br>If a file isn't chosen, a default text file called <em>simon.txt</em><br>will be generated in the selected directory.</HTML>", "Choose File", JOptionPane.PLAIN_MESSAGE);
-                fileFrame.setVisible(true);
+                file = new File("./simon.txt");
+                fileSetup();
             }
 
             chooser.addActionListener(e -> {
@@ -145,23 +155,28 @@ public class Scene implements ChangeListener, KeyListener {
                         file = tempFile;
                     }
 
-                    if (file != null) {
-                        fileFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-                        fileFrame.dispose();
+                    fileFrame.dispose();
 
-                        frame.setVisible(true);
-                        System.out.println(container.requestFocusInWindow());
-
-                        fileSetup();
-                    }
+                    fileSetup();
                 }
             });
+
             startBtn.addActionListener(e -> playGame());
+
             bgBtn.addActionListener(e -> {
                 picker.setColor(bgColor);
                 colorFrame.setVisible(true);
             });
-            fileBtn.addActionListener(e -> fileFrame.setVisible(true));
+
+            fileBtn.addActionListener(e -> {
+                JOptionPane.showMessageDialog(null, "<HTML>Please select a text file or directory for storing save data.<br>If a file isn't chosen, a default text file called <em>simon.txt</em><br>will be generated in the selected directory.</HTML>", "Choose File", JOptionPane.PLAIN_MESSAGE);
+                fileFrame.setVisible(true);
+            });
+
+            resetBtn.addActionListener(e -> {
+                file = new File("./simon.txt");
+                fileSetup();
+            });
         } catch (Exception ex) {
             System.out.println(ex.getMessage());
         }
@@ -198,7 +213,7 @@ public class Scene implements ChangeListener, KeyListener {
 
         try {
             if (file.isDirectory()) {
-                file = new File(file.getPath() + File.separator + "simon.txt");
+                file = new File(file.getPath() + "/simon.txt");
             }
 
             // Check to make sure our file exists
@@ -224,7 +239,7 @@ public class Scene implements ChangeListener, KeyListener {
                 System.out.println("Incorrect file data.");
             }
 
-            about.setText("<HTML>Welcome to Simon.<br><br>Your hi-score is " + hiScore + ".<br><br>How to play:<br>There are four buttons — green, red, yellow and blue. When one button lights up, click on the same one. The sequence begins with a single flash, followed by a repeat of the previous button and a quick flash of a different button. Your task is to replicate this pattern. The complexity increases with each successful round, adding an extra flash each time. The game continues until an incorrect pattern repetition occurs.<br><br>Developed by Kiefer Menard.<br><br>Save file path: <em>" + (file != null ? file.getPath() : "null") + "</em></HTML>");
+            about.setText("<HTML>Welcome to Simon.<br><br>Your hi-score is " + hiScore + ".<br><br>How to play:<br>There are four buttons – green, red, yellow and blue. When one button lights up, click on the same one. The sequence begins with a single flash, followed by a repeat of the previous button and a quick flash of a different button. Your task is to replicate this pattern. The complexity increases with each successful round, adding an extra flash each time. The game continues until an incorrect pattern repetition occurs.<br><br>Based on the game by <u>Ralph H. Baer and Howard J. Morrison</u>.<br>Developed by <u>Kiefer Menard</u>.<br><br>Save file path: <strong>" + (file.getPath().equals("./simon.txt") ? "Default" : "<em>" + file.getPath() + "</em>") + "</strong></HTML>");
 
             scanner.close();
         } catch (IOException ex) {
@@ -263,7 +278,9 @@ public class Scene implements ChangeListener, KeyListener {
         startBtn.setBackground(bgAdjusted);
         optionLabel.setForeground(textColor);
         bgBtn.setBackground(bgAdjusted);
+        fileContainer.setBackground(bgColor);
         fileBtn.setBackground(bgAdjusted);
+        resetBtn.setBackground(bgAdjusted);
         about.setBackground(bgColor);
         about.setForeground(textColor);
     }
