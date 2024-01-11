@@ -1,17 +1,25 @@
+import com.github.kwhat.jnativehook.*;
+import com.github.kwhat.jnativehook.keyboard.*;
+
 import javax.swing.*;
-import javax.swing.event.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import static java.lang.Integer.max;
 import static java.lang.Integer.parseInt;
 
-public class Scene implements ChangeListener, KeyListener {
+public class Scene implements ChangeListener, NativeKeyListener {
     // Variables:
     // Field variables
     private int height; // The width of the window
@@ -22,6 +30,8 @@ public class Scene implements ChangeListener, KeyListener {
     private FileWriter writer;
     private int hiScore = 0;
     private int score;
+    private int input;
+    ArrayList<Integer> pattern;
     // Program variables
     private static Font btnFont = new Font(Font.SANS_SERIF, Font.PLAIN, 25); // The font for buttons
     private static Font H1 = new Font(Font.SANS_SERIF, Font.BOLD, 50); // The font for the H1s
@@ -48,6 +58,66 @@ public class Scene implements ChangeListener, KeyListener {
     private JButton redBtn = new JButton();
     private JButton yellowBtn = new JButton();
     private JButton blueBtn = new JButton();
+    // Flags
+    private boolean btnPressed = false;
+    // Thread
+    private Runnable runnable = new Runnable(){
+        public void run(){
+            while(true) {
+                pattern.add((int)(Math.random() * 4) + 1);
+
+                for (Integer i : pattern) {
+                    System.out.println("Button: " + i);
+
+                    switch (i) {
+                        case 1: greenBtn.setBackground(Color.GREEN.brighter()); break;
+                        case 2: redBtn.setBackground(Color.RED.brighter()); break;
+                        case 3: yellowBtn.setBackground(Color.YELLOW.brighter()); break;
+                        case 4: blueBtn.setBackground(Color.BLUE.brighter()); break;
+                    }
+
+                    pause(500); // Pause for 0.5 sec
+
+                    switch (i) {
+                        case 1: greenBtn.setBackground(Color.GREEN.darker()); break;
+                        case 2: redBtn.setBackground(Color.RED.darker()); break;
+                        case 3: yellowBtn.setBackground(Color.YELLOW.darker()); break;
+                        case 4: blueBtn.setBackground(Color.BLUE.darker()); break;
+                    }
+
+                    pause(500); // Pause for 0.5 sec
+                }
+
+                for (Integer i : pattern) {
+                    System.out.println("Waiting for button press");
+                    while (!btnPressed); // Wait for button press
+
+                    if(input != pattern.get(i)) {
+                        endGame();
+                        return;
+                    }
+                }
+
+                score++;
+                System.out.println("Next iteration");
+            }
+        }
+    };
+    Executor executor = Executors.newSingleThreadExecutor();
+
+    /**
+     * The default constructor.
+     *
+     * @author Kiefer Menard
+     */
+    public Scene() {
+        // Variables
+        height = 500;
+        width = 800;
+        windowName = "Simon";
+
+        initialize();
+    }
 
     /**
      * The default constructor.
@@ -105,8 +175,6 @@ public class Scene implements ChangeListener, KeyListener {
             chooser.setFileFilter(new FileNameExtensionFilter("*.txt", "txt"));
 
             container.setLayout(new BorderLayout(10, 0));
-            container.setFocusable(true);
-            System.out.println(container.requestFocusInWindow());
 
             mainMenu.setLayout(new GridLayout(6, 1, 0, 2));
 
@@ -126,16 +194,19 @@ public class Scene implements ChangeListener, KeyListener {
             fileContainer.add(resetDataBtn, BorderLayout.WEST);
             resetDataBtn.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 10));
             resetDataBtn.setOpaque(true);
+            resetDataBtn.setToolTipText("Reset the saved background color to white and the hi-score to 0.");
 
             resetPathBtn  = new JButton("<HTML>Reset file path<br>to default</HTML>");
             fileContainer.add(resetPathBtn, BorderLayout.EAST);
             resetPathBtn.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 10));
             resetPathBtn.setOpaque(true);
+            resetPathBtn.setToolTipText("Reset the save file path to the default stored in the same folder as this program.");
 
             mainMenu.add(fileContainer);
 
             createBtn(fileBtn, "Change save file", mainMenu);
             fileBtn.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 15));
+            fileBtn.setToolTipText("Change the file path for the save data file.");
 
             container.add(mainMenu, BorderLayout.WEST);
 
@@ -166,10 +237,10 @@ public class Scene implements ChangeListener, KeyListener {
                         file = tempFile;
                     }
 
-                    fileFrame.dispose();
-
                     fileSetup();
                 }
+
+                fileFrame.dispose();
             });
 
             startBtn.addActionListener(e -> playGame());
@@ -195,9 +266,41 @@ public class Scene implements ChangeListener, KeyListener {
                 JOptionPane.showMessageDialog(null, "<HTML>Please select a text file or directory for storing save data.<br>If a file isn't chosen, a default text file called <em>simon.txt</em><br>will be generated in the selected directory.</HTML>", "Choose File", JOptionPane.PLAIN_MESSAGE);
                 fileFrame.setVisible(true);
             });
+
+            greenBtn.addActionListener(e -> {
+                btnPressed = true;
+                input = 1;
+            });
+            redBtn.addActionListener(e -> {
+                btnPressed = true;
+                input = 2;
+            });
+            yellowBtn.addActionListener(e -> {
+                btnPressed = true;
+                input = 3;
+            });
+            blueBtn.addActionListener(e -> {
+                btnPressed = true;
+                input = 4;
+            });
         } catch (Exception ex) {
-            System.out.println(ex.getMessage());
+            ex.printStackTrace();
         }
+
+        try {
+            GlobalScreen.registerNativeHook();
+        }
+        catch (NativeHookException ex) {
+            System.err.println("There was a problem registering the native hook.");
+            System.err.println(ex.getMessage());
+            System.exit(1);
+        }
+
+        GlobalScreen.addNativeKeyListener(this);
+
+        Logger logger = Logger.getLogger(GlobalScreen.class.getPackage().getName());
+        logger.setLevel(Level.OFF);
+        logger.setUseParentHandlers(false);
     }
 
     /**
@@ -208,16 +311,18 @@ public class Scene implements ChangeListener, KeyListener {
     private void playGame() {
         // Variables
         score = 0; // Reset score
+        pattern = new ArrayList<>();
 
         container.removeAll();
-        container.revalidate();
-        container.repaint();
-
-        container.setLayout(new GridLayout(2,2));
+        container.setLayout(new GridLayout(2,2, 20, 20));
         container.add(greenBtn);
         container.add(yellowBtn);
         container.add(redBtn);
         container.add(blueBtn);
+        container.revalidate();
+        container.repaint();
+
+        executor.execute(runnable);
     }
 
     /**
@@ -230,10 +335,12 @@ public class Scene implements ChangeListener, KeyListener {
         container.revalidate();
         container.repaint();
 
-        hiScore = max(score, hiScore);
+        container.setLayout(new BorderLayout(10, 0));
 
-        initialize();
-        fileSetup();
+        container.add(mainMenu, BorderLayout.WEST);
+        container.add(about);
+
+        hiScore = max(score, hiScore);
     }
 
     /**
@@ -278,7 +385,7 @@ public class Scene implements ChangeListener, KeyListener {
 
             scanner.close();
         } catch (IOException ex) {
-            System.out.println(ex.getMessage());
+           ex.printStackTrace();
         }
     }
 
@@ -296,7 +403,7 @@ public class Scene implements ChangeListener, KeyListener {
 
             writer.close();
         } catch (IOException ex) {
-            System.out.println(ex.getMessage());
+            ex.printStackTrace();
         }
     }
 
@@ -334,29 +441,30 @@ public class Scene implements ChangeListener, KeyListener {
     }
 
     /**
-     * The keyTyped method handles keyboard inputs.
+     * The nativeKeyTyped method handles keyboard inputs.
      *
      * @author Kiefer Menard
      */
-    @Override
-    public void keyTyped(KeyEvent e) {
-        System.out.println(e.getKeyChar());
-    }
+    public void nativeKeyTyped(NativeKeyEvent e) {}
+    /**
+     * The nativeKeyPressed method handles key presses on the keyboard.
+     *
+     * @author Kiefer Menard
+     */
+    public void nativeKeyPressed(NativeKeyEvent e) {}
 
     /**
-     * The keyPressed method handles key presses on the keyboard.
+     * The nativeKeyReleased method handles key releases on the keyboard.
      *
      * @author Kiefer Menard
      */
-    @Override
-    public void keyPressed(KeyEvent e) {}
-    /**
-     * The keyReleased method handles key releases on the keyboard.
-     *
-     * @author Kiefer Menard
-     */
-    @Override
-    public void keyReleased(KeyEvent e) {}
+    public void nativeKeyReleased(NativeKeyEvent e) {
+        if (e.getKeyCode() == 1) {
+            if (greenBtn.isValid()) {
+                endGame();
+            }
+        }
+    }
 
     /**
      * The stateChanged method handles a change in the state of the color picker. I.e. when the user selects a new color.
@@ -369,6 +477,18 @@ public class Scene implements ChangeListener, KeyListener {
             writeFile();
             refreshColors();
         }
+    }
+
+    /**
+     * The pause method effectively pauses the method that calls it until the specified duration is up.
+     *
+     * @param duration The duration of time to wait in milliseconds.
+     * @author Kiefer Menard
+     */
+    private void pause(int duration) {
+        long lastMillis = System.currentTimeMillis();
+
+        while (System.currentTimeMillis() > lastMillis + duration) lastMillis = System.currentTimeMillis();
     }
 
     /**
