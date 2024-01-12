@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -30,7 +32,7 @@ public class Scene implements ChangeListener, NativeKeyListener {
     private FileWriter writer;
     private int hiScore = 0;
     private int score;
-    private int input;
+    private AtomicInteger input = new AtomicInteger();
     ArrayList<Integer> pattern;
     // Program variables
     private static Font btnFont = new Font(Font.SANS_SERIF, Font.PLAIN, 25); // The font for buttons
@@ -54,16 +56,23 @@ public class Scene implements ChangeListener, NativeKeyListener {
     private JButton resetPathBtn;
     private JButton fileBtn = new JButton();
     private JLabel about = new JLabel();
+    private JPanel btnContainer = new JPanel();
     private JButton greenBtn = new JButton();
     private JButton redBtn = new JButton();
     private JButton yellowBtn = new JButton();
     private JButton blueBtn = new JButton();
     // Flags
-    private boolean btnPressed = false;
+    private AtomicBoolean btnPressed = new AtomicBoolean(false);
     // Thread
     private Runnable runnable = new Runnable(){
         public void run(){
+            long lastMillis;
+
             while(true) {
+                // Pause for 0.75 sec
+                lastMillis = System.currentTimeMillis();
+                while(System.currentTimeMillis() < lastMillis + 750);
+
                 pattern.add((int)(Math.random() * 4) + 1);
 
                 for (Integer i : pattern) {
@@ -71,12 +80,14 @@ public class Scene implements ChangeListener, NativeKeyListener {
 
                     switch (i) {
                         case 1: greenBtn.setBackground(Color.GREEN.brighter()); break;
-                        case 2: redBtn.setBackground(Color.RED.brighter()); break;
+                        case 2: redBtn.setBackground(Color.PINK); break;
                         case 3: yellowBtn.setBackground(Color.YELLOW.brighter()); break;
-                        case 4: blueBtn.setBackground(Color.BLUE.brighter()); break;
+                        case 4: blueBtn.setBackground(Color.CYAN); break;
                     }
 
-                    pause(500); // Pause for 0.5 sec
+                    // Pause for 0.25 sec
+                    lastMillis = System.currentTimeMillis();
+                    while(System.currentTimeMillis() < lastMillis + 250);
 
                     switch (i) {
                         case 1: greenBtn.setBackground(Color.GREEN.darker()); break;
@@ -85,14 +96,25 @@ public class Scene implements ChangeListener, NativeKeyListener {
                         case 4: blueBtn.setBackground(Color.BLUE.darker()); break;
                     }
 
-                    pause(500); // Pause for 0.5 sec
+                    // Pause for 0.25 sec
+                    lastMillis = System.currentTimeMillis();
+                    while(System.currentTimeMillis() < lastMillis + 250);
+
+                    btnPressed.set(false);
                 }
 
-                for (Integer i : pattern) {
+                for (int i : pattern) {
                     System.out.println("Waiting for button press");
-                    while (!btnPressed); // Wait for button press
+                    while (!btnPressed.get()) {
+                        lastMillis = System.currentTimeMillis();
+                        while (System.currentTimeMillis() < lastMillis + 1) ;
+                    } // Wait for button press
 
-                    if(input != pattern.get(i)) {
+                    btnPressed.set(false);
+
+                    System.out.println("Press registered: " + input + " Should have been: " + i);
+
+                    if (input.get() != i) {
                         endGame();
                         return;
                     }
@@ -215,6 +237,12 @@ public class Scene implements ChangeListener, NativeKeyListener {
             frame.add(container);
             frame.setVisible(true);
 
+            btnContainer.setLayout(new GridLayout(2,2, 2, 2));
+            btnContainer.add(greenBtn);
+            btnContainer.add(redBtn);
+            btnContainer.add(yellowBtn);
+            btnContainer.add(blueBtn);
+
             greenBtn.setBackground(Color.GREEN.darker());
             greenBtn.setOpaque(true);
             redBtn.setBackground(Color.RED.darker());
@@ -255,6 +283,8 @@ public class Scene implements ChangeListener, NativeKeyListener {
                 refreshColors();
                 hiScore = 0;
                 writeFile();
+
+                about.setText("<HTML>Welcome to Simon.<br><br>Your hi-score is " + hiScore + ".<br><br>How to play:<br>There are four buttons – green, red, yellow and blue. When one button lights up, click on the same one. The sequence begins with a single flash, followed by a repeat of the previous button and a quick flash of a different button. Your task is to replicate this pattern. The complexity increases with each successful round, adding an extra flash each time. The game continues until an incorrect pattern repetition occurs.<br><br>Based on the game by <u>Ralph H. Baer and Howard J. Morrison</u>.<br>Developed by <u>Kiefer Menard</u>.<br><br>Save file path: <strong>" + (file.getPath().equals("./simon.txt") ? "Default" : "<em>" + file.getPath() + "</em>") + "</strong></HTML>");
             });
 
             resetPathBtn.addActionListener(e -> {
@@ -268,20 +298,20 @@ public class Scene implements ChangeListener, NativeKeyListener {
             });
 
             greenBtn.addActionListener(e -> {
-                btnPressed = true;
-                input = 1;
+                btnPressed.set(true);
+                input.set(1);
             });
             redBtn.addActionListener(e -> {
-                btnPressed = true;
-                input = 2;
+                btnPressed.set(true);
+                input.set(2);
             });
             yellowBtn.addActionListener(e -> {
-                btnPressed = true;
-                input = 3;
+                btnPressed.set(true);
+                input.set(3);
             });
             blueBtn.addActionListener(e -> {
-                btnPressed = true;
-                input = 4;
+                btnPressed.set(true);
+                input.set(4);
             });
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -314,11 +344,7 @@ public class Scene implements ChangeListener, NativeKeyListener {
         pattern = new ArrayList<>();
 
         container.removeAll();
-        container.setLayout(new GridLayout(2,2, 20, 20));
-        container.add(greenBtn);
-        container.add(yellowBtn);
-        container.add(redBtn);
-        container.add(blueBtn);
+        container.add(btnContainer);
         container.revalidate();
         container.repaint();
 
@@ -335,12 +361,13 @@ public class Scene implements ChangeListener, NativeKeyListener {
         container.revalidate();
         container.repaint();
 
-        container.setLayout(new BorderLayout(10, 0));
-
         container.add(mainMenu, BorderLayout.WEST);
         container.add(about);
 
         hiScore = max(score, hiScore);
+        writeFile();
+
+        about.setText("<HTML>Welcome to Simon.<br><br>Your hi-score is " + hiScore + ".<br><br>How to play:<br>There are four buttons – green, red, yellow and blue. When one button lights up, click on the same one. The sequence begins with a single flash, followed by a repeat of the previous button and a quick flash of a different button. Your task is to replicate this pattern. The complexity increases with each successful round, adding an extra flash each time. The game continues until an incorrect pattern repetition occurs.<br><br>Based on the game by <u>Ralph H. Baer and Howard J. Morrison</u>.<br>Developed by <u>Kiefer Menard</u>.<br><br>Save file path: <strong>" + (file.getPath().equals("./simon.txt") ? "Default" : "<em>" + file.getPath() + "</em>") + "</strong></HTML>");
     }
 
     /**
@@ -366,17 +393,9 @@ public class Scene implements ChangeListener, NativeKeyListener {
             Scanner scanner = new Scanner(file);
 
             try {
-                for (int i = 1; i <= 2; i++) {
-                    line = scanner.nextLine();
-
-                    switch (i) {
-                        case 1:
-                            bgColor = new Color(parseInt(line));
-                            refreshColors();
-                            break;
-                        case 2: hiScore = parseInt(line);
-                    }
-                }
+                bgColor = new Color(parseInt(scanner.nextLine()));
+                refreshColors();
+                hiScore = parseInt(scanner.nextLine());
             } catch (Exception ex) {
                 System.out.println("Incorrect file data.");
             }
@@ -485,11 +504,6 @@ public class Scene implements ChangeListener, NativeKeyListener {
      * @param duration The duration of time to wait in milliseconds.
      * @author Kiefer Menard
      */
-    private void pause(int duration) {
-        long lastMillis = System.currentTimeMillis();
-
-        while (System.currentTimeMillis() > lastMillis + duration) lastMillis = System.currentTimeMillis();
-    }
 
     /**
      * The createBtn method initializes a JButton with all the necessary attributes.
