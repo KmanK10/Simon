@@ -28,42 +28,45 @@ public class Scene implements ChangeListener, NativeKeyListener {
     private int width; // The height of the window
     private String windowName; // The name of the window
     private Color bgColor = Color.WHITE; // The background color of the game
-    private File file;
-    private FileWriter writer;
-    private int hiScore = 0;
-    private int score;
-    private AtomicInteger input = new AtomicInteger();
-    ArrayList<Integer> pattern;
+    private File file; // The file where data is stored
+    private FileWriter writer; // The writer to manipulate the file
+    private int hiScore = 0; // The users highest score
+    private int score; // The users current score
+    private AtomicInteger input = new AtomicInteger(); // The ID of the button the user pressed
+    ArrayList<Integer> pattern; // An array containing the list of moves
     // Program variables
     private static Font btnFont = new Font(Font.SANS_SERIF, Font.PLAIN, 25); // The font for buttons
     private static Font H1 = new Font(Font.SANS_SERIF, Font.BOLD, 50); // The font for the H1s
     private static Font H2 = new Font(Font.SANS_SERIF, Font.BOLD, 25); // The font for the H2s
     private static Font labelFont = new Font(Font.SANS_SERIF, Font.PLAIN, 15); // The font for labels
     // Components
-    private JFrame colorFrame = new JFrame();
-    private JColorChooser picker = new JColorChooser();
-    private JFrame fileFrame = new JFrame();
-    private JFileChooser chooser = new JFileChooser();
-    private JFrame frame = new JFrame();
-    private JPanel container = new JPanel();
-    private JPanel mainMenu = new JPanel();
-    private JLabel title = new JLabel();
-    private JButton startBtn = new JButton();
-    private JLabel optionLabel = new JLabel();
-    private JButton bgBtn = new JButton();
-    private JPanel fileContainer = new JPanel();
-    private JButton resetDataBtn;
-    private JButton resetPathBtn;
-    private JButton fileBtn = new JButton();
-    private JLabel about = new JLabel();
-    private JPanel btnContainer = new JPanel();
-    private JButton greenBtn = new JButton();
-    private JButton redBtn = new JButton();
-    private JButton yellowBtn = new JButton();
-    private JButton blueBtn = new JButton();
+    private JFrame colorFrame = new JFrame(); // The frame for the color picker
+    private JColorChooser picker = new JColorChooser(); // The color picker
+    private JFrame fileFrame = new JFrame(); // The frame for the file chooser
+    private JFileChooser chooser = new JFileChooser(); // The file chooser
+    private JFrame frame = new JFrame(); // The frame for the main game
+    private JPanel container = new JPanel(); // A panel to organize elements
+    private JPanel mainMenu = new JPanel(); // The main menu
+    private JLabel title = new JLabel(); // The title of the main menu
+    private JButton startBtn = new JButton(); // The start button
+    private JLabel optionLabel = new JLabel(); // The options header
+    private JButton bgBtn = new JButton(); // The button to change the background color
+    private JPanel fileContainer = new JPanel(); // The panel to organize the file buttons
+    private JButton resetDataBtn; // The button to reset the save data
+    private JButton resetPathBtn; // The button to reset the save file path to default
+    private JButton fileBtn = new JButton(); // The button to change the save file
+    private JLabel about = new JLabel(); // The panel containing the info about the game
+    private JPanel btnContainer = new JPanel(); // The panel to organize the 4 game play buttons
+    private JButton greenBtn = new JButton(); // The green button
+    private JButton redBtn = new JButton(); // The red button
+    private JButton yellowBtn = new JButton(); // The yellow button
+    private JButton blueBtn = new JButton(); // The blue button
     // Flags
-    private AtomicBoolean btnPressed = new AtomicBoolean(false);
+    private AtomicBoolean btnPressed = new AtomicBoolean(false); // A boolean flag telling whether a button has been pressed, functionally similar to an IRQ
     // Thread
+    /**
+     * The runnable Runnable controls the game flow. It is intended to run in a separate thread, so it can be paused without halting the rest of the program.
+     */
     private Runnable runnable = new Runnable(){
         public void run(){
             long lastMillis;
@@ -125,7 +128,8 @@ public class Scene implements ChangeListener, NativeKeyListener {
             }
         }
     };
-    Executor executor = Executors.newSingleThreadExecutor();
+
+    Executor executor = Executors.newSingleThreadExecutor(); // A thread pool so that the runnable can be run in a separate thread multiple times
 
     /**
      * The default constructor.
@@ -159,7 +163,7 @@ public class Scene implements ChangeListener, NativeKeyListener {
     }
 
     /**
-     * The initialize method sets up the window with the proper UI elements.
+     * The initialize method sets up the window with the proper UI elements and houses the ActionListeners.
      *
      * @author Kiefer Menard
      */
@@ -334,7 +338,7 @@ public class Scene implements ChangeListener, NativeKeyListener {
     }
 
     /**
-     * The playGame method runs the program flow once the game is running.
+     * The playGame method handles starting up the game and running the executor.
      *
      * @author Kiefer Menard
      */
@@ -514,7 +518,7 @@ public class Scene implements ChangeListener, NativeKeyListener {
      * @return Returns the JButton object.
      * @author Kiefer Menard
      */
-    private JButton createBtn(JButton button, String text, JPanel panel) {
+    private static JButton createBtn(JButton button, String text, JPanel panel) {
         button.setText(text);
         button.setFont(btnFont);
         button.setOpaque(true);
@@ -532,14 +536,104 @@ public class Scene implements ChangeListener, NativeKeyListener {
      * @param panel Which JPanel to add the label to.
      * @param font Which font to use.
      * @return Returns the JLabel object.
+     *
      * @author Kiefer Menard
      */
-    private JLabel createLabel(JLabel label, String text, JPanel panel, Font font) {
+    private static JLabel createLabel(JLabel label, String text, JPanel panel, Font font) {
         label.setText(text);
         label.setFont(font);
 
         panel.add(label);
 
         return label;
+    }
+
+    /**
+     * The getWidth method gets the width of the window.
+     *
+     * @return width The width of the game window.
+     *
+     * @author Kiefer Menard
+     */
+    public int getWidth() {
+        return width;
+    }
+
+    /**
+     * The getHeight method gets the height of the window.
+     *
+     * @return height The height of the game window.
+     *
+     * @author Kiefer Menard
+     */
+    public int getHeight() {
+        return height;
+    }
+
+    /**
+     * The getWindowName method gets the window name.
+     *
+     * @return windowName The name of the game window.
+     *
+     * @author Kiefer Menard
+     */
+    public String getWindowName() {
+        return windowName;
+    }
+
+    /**
+     * The setWidth method sets the width of the window.
+     *
+     * @param width The width of the game window.
+     *
+     * @author Kiefer Menard
+     */
+    public void setWidth(int width) {
+        this.width = width;
+        frame.setSize(width, height);
+    }
+
+    /**
+     * The setHeight method sets the height of the window.
+     *
+     * @param height The height of the game window.
+     *
+     * @author Kiefer Menard
+     */
+    public void setHeight(int height) {
+        this.height = height;
+        frame.setSize(width, height);
+    }
+
+    /**
+     * The setWindowName method sets the name of the window.
+     *
+     * @param windowName The name of the game window.
+     *
+     * @author Kiefer Menard
+     */
+    public void setWindowName(String windowName) {
+        this.windowName = windowName;
+        frame.setTitle(windowName);
+    }
+
+    /**
+     * The toString method returns the info about the game window.
+     *
+     * @return The window name, the width, and the height.
+     *
+     * @author Kiefer Menard
+     */
+    public String toString() {
+        return "Simon game " + windowName + "\nWidth: " + width + "\nHeight: " + height;
+    }
+
+    /**
+     * The printMethod method prints out an explanation.
+     *
+     * @author Kiefer Menard
+     */
+    public static void printMethod() {
+        System.out.println("If I call my other static methods it will break my UI, please accept this static method as tribute instead.");
     }
 }
